@@ -286,7 +286,7 @@ def parse_cluster_info(response, **options):
 def _parse_node_line(line):
     line_items = line.split(' ')
     node_id, addr, flags, master_id, ping, pong, epoch, \
-        connected = line.split(' ')[:8]
+    connected = line.split(' ')[:8]
     slots = [sl.split('-') for sl in line_items[8:]]
     node_dict = {
         'node_id': node_id,
@@ -319,7 +319,7 @@ def parse_georadius_generic(response, **options):
     else:
         response_list = response
 
-    if not options['withdist'] and not options['withcoord']\
+    if not options['withdist'] and not options['withcoord'] \
             and not options['withhash']:
         # just a bunch of places
         return [nativestr(r) for r in response_list]
@@ -447,7 +447,7 @@ class StrictRedis(object):
             'CLUSTER SETSLOT': bool_ok,
             'CLUSTER SLAVES': parse_cluster_nodes,
             'GEOPOS': lambda r: list(map(lambda ll: (float(ll[0]),
-                                         float(ll[1])), r)),
+                                                     float(ll[1])), r)),
             'GEOHASH': lambda r: list(map(nativestr, r)),
             'GEORADIUS': parse_georadius_generic,
             'GEORADIUSBYMEMBER': parse_georadius_generic,
@@ -947,6 +947,7 @@ class StrictRedis(object):
     def exists(self, name):
         "Returns a boolean indicating whether key ``name`` exists"
         return self.execute_command('EXISTS', name)
+
     __contains__ = exists
 
     def expire(self, name, time):
@@ -1632,9 +1633,21 @@ class StrictRedis(object):
         "Move ``value`` from set ``src`` to set ``dst`` atomically"
         return self.execute_command('SMOVE', src, dst, value)
 
+    '''
     def spop(self, name):
         "Remove and return a random member of set ``name``"
         return self.execute_command('SPOP', name)
+    '''
+
+    def spop(self, name, number=None):
+        """
+        Remove and return a random member of set ``name``"
+        If ``number`` is None, pops a random member of set ``name``.
+        If ``number`` is supplied, pops a list of ``number`` random
+        members of set ``name``.
+        """
+        args = number and [number] or []
+        return self.execute_command('SPOP', name, *args)
 
     def srandmember(self, name, number=None):
         """
@@ -2194,7 +2207,7 @@ class StrictRedis(object):
         elif kwargs['unit']:
             pieces.append(kwargs['unit'])
         else:
-            pieces.append('m',)
+            pieces.append('m', )
 
         for token in ('withdist', 'withcoord', 'withhash'):
             if kwargs[token]:
@@ -2743,7 +2756,7 @@ class BasePipeline(object):
         return self
 
     def _execute_transaction(self, connection, commands, raise_on_error):
-        cmds = chain([(('MULTI', ), {})], commands, [(('EXEC', ), {})])
+        cmds = chain([(('MULTI',), {})], commands, [(('EXEC',), {})])
         all_cmds = connection.pack_commands([args for args, _ in cmds])
         connection.send_packed_command(all_cmds)
         errors = []
